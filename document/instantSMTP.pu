@@ -1,0 +1,26 @@
+@startuml
+title InstantSMTP Activity diaglam
+start
+   note right
+        TCPコネクションを確立し
+        返答済み 
+   end note
+   repeat
+   :データを受信するまで待機;
+   :$receiveMsg=受信データ;
+   :$msgArray=$receiveMsg.split(" ");
+    if (test-path /function/$($msgArray[0]).ps1) then (true)  
+        :$sendMsg = \n(& func_$($msgArray[0] $msgArray[1]);
+    else (false)
+        if ($mode=DataReceive) then (true)
+            :$msgBuffer += $receiveMsg;
+            :$sendMsg="250 OK";
+        else (false)
+            :$sendMsg=\n"502 Command Not Found";
+        endif
+    endif
+    :$sendMsgを送信;   
+   repeat while($isquit -eq false)
+   :Write-Output $messageBuffer;
+end
+@end uml

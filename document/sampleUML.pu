@@ -1,0 +1,28 @@
+@startuml
+title Fizz Buzz Activity Diaglam
+
+start
+
+:ループ開始(1〜100);
+
+repeat
+    if (i % 3 == 0 && i % 5 ==0) then (true)
+        :Fizz Buzz;
+    else if (i % 3 == 0) then (true)
+        :Fizz;
+    else if (i % 5 == 0) then (true)
+        :Buzz;
+    else (else)
+        :i;
+        note right
+            これは注釈です
+            これは注釈です
+        end note
+    endif
+repeat while (i < 100)
+
+:ループ終了;
+
+stop
+
+@enduml

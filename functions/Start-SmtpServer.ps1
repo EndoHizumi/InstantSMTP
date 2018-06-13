@@ -27,13 +27,12 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
     $stream = $client.GetStream()
     try {
         responce -data "220 ready" -stream $stream 
+        Write-Debug $isQuit
         while (!$isQuit) {
             $receivetext = (receive $stream)
             $command = ($receivetext[1].Substring(0, 4)).Trim()
-            $command.Length
-            if ($command.Length -ne 0) {
                 Write-Host "$PSScriptRoot\${command}.ps1"
-                if (Test-Path  "$PSScriptRoot\${command}.ps1") {
+                if ([System.IO.File]::Exists("$PSScriptRoot\${command}.ps1")) {
                     $sendText = (& $command $receivetext[2])
                 }
                 else {
@@ -47,19 +46,16 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
                         }
                     }
                     else {
-                        $sendText = "502 Command Not Found"
+                        $sendText = ""
                     }
                 }
            
             }
-            else {
-                $sendText = "502 Command Not Found"
-            }
             responce -data $sendText -stream $stream
             Start-Sleep -Seconds 1
-        }
     }
     finally {
+        $isQuit = $false
         $client.Close()
         $listener.Stop()
         write-host "Connection closed."

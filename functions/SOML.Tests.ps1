@@ -3,7 +3,8 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 
 Describe "SOML" {
-    It "does something useful" {
-        $true | Should -Be $false
+    $returnMsg = SOML
+    It "Return Message" {
+        $returnMsg | Should -Be (gc testMessage.txt -raw -Encoding UTF8)
     }
 }

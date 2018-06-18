@@ -3,7 +3,7 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 
 Describe "TURN" {
-    It "does something useful" {
-        $true | Should -Be $false
+    It "Return 502" {
+        TURN | Should -Be "502 Command not implemented"
     }
 }

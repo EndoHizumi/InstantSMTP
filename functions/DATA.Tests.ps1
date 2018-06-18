@@ -3,10 +3,12 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 $isReceive=$false
 
-
 Describe "DATA" {
-    It "does something useful" {
-         & DATA | Should -Be "354 Ready" 
-        $isReceive | Should Be $true
+    $returnMsg = & DATA
+    It "Return 354" {
+        $returnMsg | Should -Be "354 Ready" 
     } 
+    It "`$isReceive is true"{
+        $isReceive | Should Be $true
+    }
 }

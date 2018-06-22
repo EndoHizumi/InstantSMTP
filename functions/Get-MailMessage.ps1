@@ -1,7 +1,7 @@
 # SMTP_S.ps1
 $clientDomain = ""
 $isQuit = $false
-$isReceive = $false
+$isReceiveState = $false
 $toAddress = ""
 $fromAddress = ""
 $msgBuffer = @()
@@ -9,25 +9,48 @@ $msgBuffer = @()
 function responce ([string]$data, $stream) {
     $Sendbytes = [System.Text.Encoding]::UTF8.GetBytes($data + " `r`n")
     $stream.Write($Sendbytes, 0, $Sendbytes.Length) | Out-Null
-    #Write-host $Sendbytes
-    write-host -ForegroundColor Yellow "SERVER ==> CLIENT : ${data}"
-    $Sendbytes = $null
+     Write-Verbose "SERVER ==> CLIENT : ${data}"
+     if ($DebugPreference -eq "continue"){ $temp = ($Sendbytes -join " ")}
+     Write-Debug "SendBytes:$temp"
 }
 
-function receive ($stream,$readBuffer=1024){
-    [byte[]]$Readbytes = 0..$readBuffer| % {0}
-    $stream.Read($Readbytes, 0, $Readbytes.Length)
-    [String] $receivetext = [System.Text.Encoding]::UTF8.GetString($Readbytes)
-    write-host -ForegroundColor Yellow "CLIENT ==> SERVER : $receivetext"
-    $Readbytes = $null
-    # Write-host $Readbytes
-    , $receivetext.Split(" ")
+function receive ($stream, $isDataReceive = $false) {
+    [byte[]]$Readbytes = New-Object byte[] 2097152
+    [String]$receivetext = ""
+    while ([String]$receivetext.EndsWith("`r`n") -eq $false) {
+        Write-Debug "begin Data read"
+        $result=$stream.Read($Readbytes, 0, 102400)
+        Write-Debug "Read ${result}Byte"
+        $Readbytes = filterZeroByte $Readbytes
+        if ($DebugPreference -eq "continue"){$temp = ($Readbytes -join " ")}
+        Write-Debug "ReadValidBytes(${result}Byte):$temp"
+        $receivetext += [System.Text.Encoding]::UTF8.GetString($Readbytes)
+    }
+    Write-Verbose "CLIENT ==> SERVER : $receivetext"
+    if ($isDataReceive) {
+        $receivetext
+    }
+    else {
+        , $receivetext.Split(" ")
+    }
+}
+
+function filterZeroByte ([Array] $data) {
+    foreach ($item in $data) {
+        if ($item -eq 0) {
+            break
+        }
+        $count++
+    }
+    [byte[]] $removeZeroArray = New-Object byte[] $count
+    [System.Array]::Copy($data,0,$removeZeroArray,0,$count)
+    , $removeZeroArray
 }
 
 function  Show-Status () {
     write-debug "Show-Status Start >> `r`n"
     write-debug "`$clientDomain:$clientDomain"
-    write-debug "`$isReceive:$isReceive"
+    write-debug "`$isReceiveState:$isReceiveState"
     write-debug "`$isQuit:$isQuit"
     write-debug "`$toAddress:$toAddress"
     write-debug "`$fromAddress:$fromAddress"
@@ -35,10 +58,10 @@ function  Show-Status () {
     write-debug ">> Show-Status End`r`n"
 }
 
-#制御用変数の初期化
-function  Init-Status () {
+#制御用変数の初期匁E
+function  Initialize-Status () {
     $script:clientDomain = ""
-    $script:isReceive = $script:false
+    $script:isReceiveState = $script:false
     $script:isQuit = $script:false
     $script:toAddress = ""
     $script:fromAddress = ""
@@ -47,30 +70,32 @@ function  Init-Status () {
 
 
 function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [switch]$Echo = $false) {
-    Show-Status
-    Init-Status
-    Write-Host "Initialized status buffer"
+    Initialize-Status
+    Write-Debug "Initialized status buffer"
     Show-Status
 
     $listener = new-object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Parse($IPAdress), $port)
     $listener.start()
-    write-host "Waiting for a connection on ${IPAdress}:${port}..."
+    Write-Verbose "Waiting for a connection on ${IPAdress}:${port}..."
     $client = $listener.AcceptTcpClient() 
-    write-host "Connected from $($client.Client.RemoteEndPoint)"
+    Write-Verbose "Connected from $($client.Client.RemoteEndPoint)"
     $stream = $client.GetStream()
 
     try {
         responce -data "220 ready" -stream $stream 
         while (!$isQuit) {
             Show-Status
-            if ($isReceive) {
-                $receivetext = (receive $stream 2097152)
-                if (!$receivetext.EndsWith(".")) {
-                    $script:msgBuffer += $receivetext
-                    $sendText = "250 OK Receive Message"    
+            if ($isReceiveState) {
+                $receivetext = (receive $stream $true)
+                
+                $script:msgBuffer += $receivetext
+                $sendText = "250 OK Receive Message"    
+                if ($receivetext[$receivetext.count - 1].EndsWith(".`r`n")) {
+                    $isReceiveState = $false
+                    Write-Debug "Message End"
                 }
                 else {
-                    $isReceive = $false
+                    $isReceiveState = $true
                 }
             }
             else {
@@ -82,7 +107,7 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
                     continue
                 }
                 if ([System.IO.File]::Exists("$PSScriptRoot\${command}.ps1")) {
-                    Write-Debug "OK Invoke Command ${command}"
+                    Write-Verbose "OK Invoke Command ${command}"
                     $sendText = (& $command $receivetext[1])
                 }
                 else {
@@ -94,15 +119,16 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
         }
     }
     catch {
-        write-host -ForegroundColor red $error
+        $error
+        Show-Status
         responce -data "451 Innternal Error" -stream $stream
     }
     finally {
-        RSET |Out-Null
         $client.Close()
         $listener.Stop()
-        write-host "Connection closed."
-        Write-Output $msgBuffer
+        Write-Verbose "Connection closed."
+        Write-Output  $script:msgBuffer
+        RSET |Out-Null
     }
 }
 

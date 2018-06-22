@@ -58,7 +58,7 @@ function  Show-Status () {
     write-debug ">> Show-Status End`r`n"
 }
 
-#制御用変数の初期匁E
+#制御用変数の初期化
 function  Initialize-Status () {
     $script:clientDomain = ""
     $script:isReceiveState = $script:false
@@ -70,6 +70,7 @@ function  Initialize-Status () {
 
 
 function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [switch]$Echo = $false) {
+    Start-Transcript 
     Initialize-Status
     Write-Debug "Initialized status buffer"
     Show-Status
@@ -129,6 +130,7 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
         Write-Verbose "Connection closed."
         Write-Output  $script:msgBuffer
         RSET |Out-Null
+        Stop-Transcript
     }
 }
 

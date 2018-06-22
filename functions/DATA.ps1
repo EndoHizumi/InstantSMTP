@@ -1,4 +1,4 @@
 function DATA () {
-    $script:isReceive=$true
+    $script:isReceiveState=$true
     "354 Ready"
 }

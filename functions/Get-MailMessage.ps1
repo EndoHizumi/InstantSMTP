@@ -63,7 +63,7 @@ function  Initialize-Status () {
 
 
 function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [switch]$isOutputFile = $true) {
-    $tracelogPath = "./log/traceLog" + (get-date -Format "yyyyMMddhhmmssffff") + [String]::format( "{0:0000}", ($sequence += 1)) + ".txt"
+    $tracelogPath = "${PSScriptRoot}/../log/traceLog" + (get-date -Format "yyyyMMddhhmmssffff") + [String]::format( "{0:0000}", ($sequence += 1)) + ".txt"
     Start-Transcript -Path $tracelogPath |  Write-Verbose
     Initialize-Status
     Write-Verbose "Initialized status buffer"
@@ -121,10 +121,6 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
         $listener.Stop()
         Write-Verbose "Connection closed."
         Write-Output  $script:msgBuffer
-        if($isOutputFile){
-            $subject = ""
-            Set-Content -Path "mailbox/${subject}.eml" -value $script:msgBuffer -Encoding utf8
-        }
         RSET |Out-Null
         Stop-Transcript | Write-Verbose
     }

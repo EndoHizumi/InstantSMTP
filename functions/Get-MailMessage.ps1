@@ -121,6 +121,10 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
         $listener.Stop()
         Write-Verbose "Connection closed."
         Write-Output  $script:msgBuffer
+        if($isOutputFile){
+            $filename = "ReceiveMessage_" + (get-date -Format "yyyyMMddhhmmssffff") + [String]::format( "{0:0000}", ($sequence += 1)) + ".eml"
+            Set-Content -Path "${PSScriptRoot}/../mailBox/${filename}" -Value $script:msgBuffer -Encoding utf8
+        }
         RSET |Out-Null
         Stop-Transcript | Write-Verbose
     }

@@ -102,7 +102,11 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
                 }
                 if ([System.IO.File]::Exists("$PSScriptRoot\${command}.ps1")) {
                     Write-Verbose "OK Invoke Command ${command}"
-                    $sendText = (& $command $receivetext[1])
+                    $sendText = if($receivetext.count -eq 1){
+                        (& $command)
+                    }else{
+                        (& $command $receivetext[1])
+                    }
                 }
                 else {
                     $sendText = "502 Command not implemented"

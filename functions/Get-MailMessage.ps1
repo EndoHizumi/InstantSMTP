@@ -16,7 +16,7 @@ function responce ([string]$data, $stream) {
     }
 }
 
-function receive ($stream, $isDataReceive = $false , $readLength = 1024) {
+function receive ($stream, $readLength = 1024) {
     [String]$receivetext = ""
     Write-Verbose "begin Data read"
     [byte[]]$Readbytes = New-Object byte[] $readLength
@@ -31,11 +31,11 @@ function receive ($stream, $isDataReceive = $false , $readLength = 1024) {
     $receivetext += [System.Text.Encoding]::UTF8.GetString($removeZeroArray)
     $Readbytes = $null
     Write-Verbose "CLIENT ==> SERVER : $receivetext"
-    if ($isDataReceive) {
+    if ($isReceiveState) {
         $receivetext
     }
     else {
-        , $receivetext.Split(" ")
+        , ($receivetext.Replace("`r`n","")).Split(" ")
     }
     
 }
@@ -101,6 +101,7 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
                     continue
                 }
                 if ([System.IO.File]::Exists("$PSScriptRoot\${command}.ps1")) {
+                    Throw "UserException"
                     Write-Verbose "OK Invoke Command ${command}"
                     $sendText = if($receivetext.count -eq 1){
                         (& $command)
@@ -117,8 +118,9 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
         }
     }
     catch {
-        $error
         responce -data "451 Innternal Error" -stream $stream
+        Write-Verbose $global:error[0] 
+        throw $global:error[0] 
     }
     finally {
         $client.Close()

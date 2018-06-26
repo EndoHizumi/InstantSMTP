@@ -35,7 +35,7 @@ function receive ($stream, $readLength = 1024) {
         $receivetext
     }
     else {
-        , ($receivetext.Replace("`r`n","")).Split(" ")
+        , ($receivetext -replace "`r`n","").Split(" ")
     }
     
 }

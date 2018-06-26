@@ -94,14 +94,13 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
             }
             else {
                 $receivetext = (receive $stream)
-                $command = ($receivetext[0].Substring(0, 4))
+                $command = $receivetext[0]
                 Write-Verbose "$PSScriptRoot\${command}.ps1"
                 if ($receivetext.count -eq 0) {
                     responce -data $null -stream $stream
                     continue
                 }
                 if ([System.IO.File]::Exists("$PSScriptRoot\${command}.ps1")) {
-                    Throw "UserException"
                     Write-Verbose "OK Invoke Command ${command}"
                     $sendText = if($receivetext.count -eq 1){
                         (& $command)

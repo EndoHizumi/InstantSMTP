@@ -1,4 +1,4 @@
 function EHLO ($arg) {
     $script:clientDomain=$arg
-    return "250 OK"
+    return "502 Command not implemented"
 }

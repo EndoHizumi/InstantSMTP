@@ -81,7 +81,7 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
         while (!$isQuit) {
             Show-Status
             if ($isReceiveState) {
-                $receivetext = (receive $stream $true 2097152)
+                $receivetext = (receive $stream 2097152)
                 $script:msgBuffer += $receivetext
                 $sendText = "250 OK Receive Message"    
                 if ($receivetext.EndsWith(".`r`n")) {
@@ -114,6 +114,7 @@ function Get-MailMessage([int]$port = 25, [string]$IPAdress = "127.0.0.1", [swit
             }
             responce -data $sendText -stream $stream
             $receivetext = ""
+            Start-Sleep -Milliseconds 5
         }
     }
     catch {

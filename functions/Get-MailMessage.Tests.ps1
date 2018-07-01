@@ -24,7 +24,7 @@ Describe "get-mailmessage" {
         $result = Start-Job -ScriptBlock{import-module C:\Users\sh.kikuchi\Documents\GitHub\InstantSMTP\InstantSMTP.psm1;get-mailmessage;}
         Send-MailMessage -To "hoge@example.com" -From "foo@example.com" -SmtpServer "127.0.0.1" -Subject "test Message" -Body "hello InstanSMTP." -Encoding UTF8   
         $expect = get-TestMessage
-        while ($result.State -ne "Completed"){
+        while ($result.State -eq "Running"){
             Start-Sleep -Milliseconds 1
         }
         $actual = Receive-Job $result.Id

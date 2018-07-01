@@ -4,7 +4,7 @@
 
 ## Overview
 InstantSMTP is an embedded SMTP server for unit testing.
-![demo](\document\demo.gif)
+![demo](/document/demo.gif)
 
 ## Installation method
 

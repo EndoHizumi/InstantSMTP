@@ -4,7 +4,7 @@
 
 ## 概要
 InstantSMTP は、ユニットテスト向け組み込み式SMTPサーバーです。
-![demo](\document\demo.gif)
+![demo](/document/demo.gif)
 
 ## インストール方法
 
